@@ -1,22 +1,81 @@
+
 def getpeseldate(pesel):
-    rok = int(pesel[0:2])
-    miesiac = int(pesel[2:4])
-    dzien = int(pesel[4:6])
-    if (miesiac > 20):
-        miesiac = miesiac - 20
+    try:
+        s = str(pesel)
+        if len(s) < 6:
+            return [None, None, None]
+        rok = int(s[0:2])
+        miesiac = int(s[2:4])
+        dzien = int(s[4:6])
+    except Exception:
+        return [None, None, None]
+    if miesiac > 20:
+        miesiac -= 20
         rok = 2000 + rok
     else:
         rok = 1900 + rok
-    return [dzien,miesiac,rok]
+    return [dzien, miesiac, rok]
+
+class InsufficientFunds(Exception):
+    pass
+
 class Account:
-    def __init__(self, first_name, last_name, pesel, kod):
+    def __init__(self, first_name=None, last_name=None, pesel=None, kod=None, company_name=None, nip=None):
         self.first_name = first_name
         self.last_name = last_name
-        self.balance = 0
-        if (len(str(pesel)) != 11):
-            self.pesel = "Invalid"
+        self.company_name = None
+        self.balance = 0.0
+        self.pesel = "Invalid"
+        self.nip = "Invalid"
+        if company_name:
+            self.company_name = company_name
+            if isinstance(nip, str) and len(nip) == 10 and nip.isdigit():
+                self.nip = nip
         else:
-            self.pesel = pesel
-        kod = kod.split("_")
-        if(kod[0]=="PROM" and len(kod[1])==3 and getpeseldate(str(pesel))[2]>1960):
-            self.balance += 50
+            if isinstance(pesel, str) and len(pesel) == 11:
+                self.pesel = pesel
+        parts = []
+        if isinstance(kod, str) and "_" in kod:
+            parts = kod.split("_", 1)
+        if parts and parts[0] == "PROM" and len(parts[1]) == 3 and self.pesel != "Invalid":
+            year = getpeseldate(self.pesel)[2]
+            if isinstance(year, int) and year > 1960:
+                self.balance += 50.0
+
+    def deposit(self, amount):
+        if amount <= 0:
+            raise ValueError
+        self.balance += float(amount)
+
+    def withdraw(self, amount):
+        if amount <= 0:
+            raise ValueError
+        if amount > self.balance:
+            raise InsufficientFunds
+        self.balance -= float(amount)
+
+    def send_transfer(self, amount):
+        if amount <= 0:
+            raise ValueError
+        if amount > self.balance:
+            raise InsufficientFunds
+        self.balance -= float(amount)
+
+    def receive_transfer(self, amount):
+        if amount <= 0:
+            raise ValueError
+        self.balance += float(amount)
+
+    def send_express_transfer(self, amount):
+        if amount <= 0:
+            raise ValueError
+        fee = 1.0 if not self.company_name else 5.0
+        if amount > self.balance:
+            raise InsufficientFunds
+        self.balance -= float(amount)
+        self.balance -= fee
+        if self.balance < -fee:
+            raise InsufficientFunds
+
+
+
