@@ -1,4 +1,3 @@
-
 def getpeseldate(pesel):
     try:
         s = str(pesel)
@@ -27,6 +26,9 @@ class Account:
         self.balance = 0.0
         self.pesel = "Invalid"
         self.nip = "Invalid"
+        # lista historii operacji
+        self.history = []
+
         if company_name:
             self.company_name = company_name
             if isinstance(nip, str) and len(nip) == 10 and nip.isdigit():
@@ -41,30 +43,40 @@ class Account:
             year = getpeseldate(self.pesel)[2]
             if isinstance(year, int) and year > 1960:
                 self.balance += 50.0
+                # promo jako pozycja w historii
+                self.history.append(round(50.0, 2))
 
     def deposit(self, amount):
         if amount <= 0:
             raise ValueError
-        self.balance += float(amount)
+        amount_f = float(amount)
+        self.balance += amount_f
+        self.history.append(round(amount_f, 2))
 
     def withdraw(self, amount):
         if amount <= 0:
             raise ValueError
         if amount > self.balance:
             raise InsufficientFunds
-        self.balance -= float(amount)
+        amount_f = float(amount)
+        self.balance -= amount_f
+        self.history.append(round(-amount_f, 2))
 
     def send_transfer(self, amount):
         if amount <= 0:
             raise ValueError
         if amount > self.balance:
             raise InsufficientFunds
-        self.balance -= float(amount)
+        amount_f = float(amount)
+        self.balance -= amount_f
+        self.history.append(round(-amount_f, 2))
 
     def receive_transfer(self, amount):
         if amount <= 0:
             raise ValueError
-        self.balance += float(amount)
+        amount_f = float(amount)
+        self.balance += amount_f
+        self.history.append(round(amount_f, 2))
 
     def send_express_transfer(self, amount):
         if amount <= 0:
@@ -72,10 +84,12 @@ class Account:
         fee = 1.0 if not self.company_name else 5.0
         if amount > self.balance:
             raise InsufficientFunds
-        self.balance -= float(amount)
-        self.balance -= fee
-        if self.balance < -fee:
+        # sprawdzenie oryginalnej logiki: nie pozwalamy zejść poniżej -fee (zgodnie z wcześniejszym kodem)
+        new_balance = self.balance - float(amount) - float(fee)
+        if new_balance < -fee:
             raise InsufficientFunds
-
-
+        # zatwierdź operację
+        self.balance = new_balance
+        self.history.append(round(-float(amount), 2))
+        self.history.append(round(-float(fee), 2))
 
