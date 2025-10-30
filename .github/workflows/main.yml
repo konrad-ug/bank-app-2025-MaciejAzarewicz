@@ -2,9 +2,9 @@ name: Unit tests
 
 on:
   push:
-    branches: [ main, lab4, lab4-ci-history ]
+    branches: [ main, lab3]
   pull_request:
-    branches: [ main ]
+    branches: [ main, lab3]
 
 jobs:
   test:
