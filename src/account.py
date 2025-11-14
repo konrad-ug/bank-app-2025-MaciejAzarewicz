@@ -91,3 +91,37 @@ class Account:
         self.history.append(round(-float(amount), 2))
         self.history.append(round(-float(fee), 2))
 
+    def submit_for_loan(self, amount):
+        """
+        Try to grant a personal loan of `amount`.
+        Rules:
+          - Only personal accounts (no company_name) are eligible.
+          - Condition A: last 3 transactions are deposits (positive values).
+          - Condition B: account has at least 5 transactions and sum(last 5) > amount.
+        Behaviour:
+          - If approved: increase balance by amount, append amount to history (rounded),
+            return True.
+          - If not approved: return False.
+        Consistent with other methods, raise ValueError for non-positive amounts.
+        """
+        if amount <= 0:
+            raise ValueError
+
+        # business accounts are not eligible
+        if self.company_name:
+            return False
+
+        # Condition A: last 3 transactions are deposits
+        if len(self.history) >= 3 and all(x > 0 for x in self.history[-3:]):
+            self.balance += float(amount)
+            self.history.append(round(float(amount), 2))
+            return True
+
+        # Condition B: at least 5 transactions and sum(last 5) > amount
+        if len(self.history) >= 5:
+            if sum(self.history[-5:]) > float(amount):
+                self.balance += float(amount)
+                self.history.append(round(float(amount), 2))
+                return True
+
+        return False
