@@ -25,3 +25,29 @@ def account_with_5_history(personal_account):
     a.receive_transfer(30)  # +30
     return a
 
+@pytest.fixture
+def business_account():
+    """Proste konto firmowe z prawidłowym NIP-em."""
+    return Account(company_name="TestCompany", nip="1234567890")
+
+@pytest.fixture
+def business_account_with_zus_transfer():
+    """Konto firmowe z przelewem do ZUS i odpowiednim saldem."""
+    acc = Account(company_name="CompanyZUS", nip="9876543210")
+    acc.deposit(10000)  # Wysokie saldo
+    acc.send_transfer(1775)  # Przelew do ZUS
+    return acc
+
+@pytest.fixture
+def business_account_high_balance_no_zus():
+    """Konto firmowe z wysokim saldem ale bez przelewu do ZUS."""
+    acc = Account(company_name="CompanyNoZUS", nip="1111111111")
+    acc.deposit(10000)
+    return acc
+
+@pytest.fixture
+def accounts_registry():
+    """Pusty rejestr kont dla testów."""
+    from src.registry import AccountsRegistry
+    return AccountsRegistry()
+
