@@ -86,75 +86,36 @@ class Account:
             raise InsufficientFunds
         new_balance = self.balance - float(amount) - float(fee)
         if new_balance < -fee:
-            raise InsufficientFunds  # pragma: no cover
+            raise InsufficientFunds
         self.balance = new_balance
         self.history.append(round(-float(amount), 2))
         self.history.append(round(-float(fee), 2))
 
     def submit_for_loan(self, amount):
-        """
-        Try to grant a personal loan of `amount`.
-        Rules:
-          - Only personal accounts (no company_name) are eligible.
-          - Condition A: last 3 transactions are deposits (positive values).
-          - Condition B: account has at least 5 transactions and sum(last 5) > amount.
-        Behaviour:
-          - If approved: increase balance by amount, append amount to history (rounded),
-            return True.
-          - If not approved: return False.
-        Consistent with other methods, raise ValueError for non-positive amounts.
-        """
         if amount <= 0:
             raise ValueError
-
-        # business accounts are not eligible
         if self.company_name:
             return False
-
-        # Condition A: last 3 transactions are deposits
         if len(self.history) >= 3 and all(x > 0 for x in self.history[-3:]):
             self.balance += float(amount)
             self.history.append(round(float(amount), 2))
             return True
-
-        # Condition B: at least 5 transactions and sum(last 5) > amount
         if len(self.history) >= 5:
             if sum(self.history[-5:]) > float(amount):
                 self.balance += float(amount)
                 self.history.append(round(float(amount), 2))
                 return True
-
         return False
 
     def take_loan(self, amount):
-        """
-        Try to grant a business loan of `amount`.
-        Rules:
-          - Only business accounts (company_name present) are eligible.
-          - Condition A: balance >= 2 * amount
-          - Condition B: at least one ZUS transfer (-1775) in history
-        Behaviour:
-          - If both conditions approved: increase balance by amount, 
-            append amount to history (rounded), return True.
-          - If not approved: return False (no changes).
-        Raises ValueError for non-positive amounts.
-        """
         if amount <= 0:
             raise ValueError
-
-        # Only business accounts are eligible
         if not self.company_name:
             return False
-
-        # Condition A: balance >= 2 * amount
         if self.balance < 2 * float(amount):
             return False
-
-        # Condition B: at least one ZUS transfer (-1775) in history
         if -1775 not in self.history:
             return False
-
-        # Both conditions met - approve loan
         self.balance += float(amount)
         self.history.append(round(float(amount), 2))
         return True
