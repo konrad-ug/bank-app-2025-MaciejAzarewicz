@@ -123,3 +123,14 @@ class TestAccountCRUD:
         get_response = api_client.get(f'/api/accounts/{pesel}')
         assert get_response.status_code == 200
         assert get_response.json["pesel"] == pesel
+
+    def test_create_account_duplicate_pesel_should_return_409(self, api_client, sample_account_data):
+        # Create first account
+        response1 = api_client.post('/api/accounts', json=sample_account_data)
+        assert response1.status_code == 201
+        
+        # Try to create second account with same PESEL
+        response2 = api_client.post('/api/accounts', json=sample_account_data)
+        assert response2.status_code == 409
+        assert "error" in response2.json
+        assert "already exists" in response2.json["error"]

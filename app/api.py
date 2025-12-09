@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from src.registry import AccountsRegistry
-from src.account import Account
+from src.account import Account, InsufficientFunds
 
 app = Flask(__name__)
 registry = AccountsRegistry()
@@ -9,9 +9,24 @@ registry = AccountsRegistry()
 def create_account():
     data = request.get_json()
     print(f"Create account request: {data}")
-    account = Account(data["name"], data["surname"], data["pesel"])
-    registry.add_account(account)
-    return jsonify({"message": "Account created"}), 201
+    try:
+        # Extract all fields from data, handling both personal and business accounts
+        account_data = {
+            "first_name": data.get("name"),
+            "last_name": data.get("surname"), 
+            "pesel": data.get("pesel"),
+            "company_name": data.get("company_name"),
+            "nip": data.get("nip")
+        }
+        # Remove None values
+        account_data = {k: v for k, v in account_data.items() if v is not None}
+        account = Account(**account_data)
+        registry.add_account(account)
+        return jsonify({"message": "Account created"}), 201
+    except ValueError as e:
+        if "already exists" in str(e):
+            return jsonify({"error": str(e)}), 409
+        return jsonify({"error": str(e)}), 400
 
 @app.route("/api/accounts", methods=['GET'])
 def get_all_accounts():
@@ -54,3 +69,46 @@ def delete_account(pesel):
     if not success:
         return jsonify({"error": "Account not found"}), 404
     return jsonify({"message": "Account deleted"}), 200
+
+@app.route("/api/accounts/<pesel>/transfer", methods=['POST'])
+def transfer_money(pesel):
+    print(f"Transfer money request: {pesel}")
+    data = request.get_json()
+    
+    # Find the account
+    account = registry.find_account_by_pesel(pesel)
+    if account is None:
+        return jsonify({"error": "Account not found"}), 404
+    
+    # Validate transfer type
+    transfer_type = data.get("type")
+    if transfer_type not in ["incoming", "outgoing", "express"]:
+        return jsonify({"error": "Invalid transfer type. Must be: incoming, outgoing, or express"}), 400
+    
+    # Validate amount
+    try:
+        amount = float(data.get("amount"))
+        if amount <= 0:
+            return jsonify({"error": "Amount must be positive"}), 400
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid amount"}), 400
+    
+    try:
+        if transfer_type == "incoming":
+            account.receive_transfer(amount)
+        elif transfer_type == "outgoing":
+            account.send_transfer(amount)
+        elif transfer_type == "express":
+            account.send_express_transfer(amount)
+        
+        return jsonify({
+            "message": "Transfer completed successfully",
+            "balance": account.balance
+        }), 200
+        
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except InsufficientFunds as e:
+        return jsonify({"error": "InsufficientFunds"}), 422
+    except Exception as e:
+        return jsonify({"error": str(e)}), 422

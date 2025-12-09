@@ -85,14 +85,26 @@ class TestAccountsRegistry:
         assert registry1.count_accounts() == 1
         assert registry2.count_accounts() == 0
 
+    def test_add_account_duplicate_pesel_registry_independence(self):
+        registry1 = AccountsRegistry()
+        registry2 = AccountsRegistry()
+        acc = Account("Jan", "Kowalski", "05240811968")
+        registry1.add_account(acc)
+        assert registry1.count_accounts() == 1
+        # Same PESEL should work in different registry
+        acc2 = Account("Anna", "Nowak", "05240811968")
+        registry2.add_account(acc2)
+        assert registry2.count_accounts() == 1
+
     def test_find_first_matching_pesel_with_duplicates(self, accounts_registry):
         registry = accounts_registry
         acc1 = Account("Jan", "Kowalski", "05240811968")
         acc2 = Account("Janina", "Kowalska", "05240811968")
         registry.add_account(acc1)
-        registry.add_account(acc2)
-        found = registry.find_account_by_pesel("05240811968")
-        assert found.first_name == "Jan"
+        # Test that adding duplicate PESEL raises ValueError
+        with pytest.raises(ValueError) as excinfo:
+            registry.add_account(acc2)
+        assert "already exists" in str(excinfo.value)
 
     @pytest.mark.parametrize("pesel", [
         "05240811968",

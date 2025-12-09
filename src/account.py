@@ -34,6 +34,9 @@ class Account:
             self.company_name = company_name
             if isinstance(nip, str) and len(nip) == 10 and nip.isdigit():
                 self.nip = nip
+            # Set PESEL for company accounts as well
+            if isinstance(pesel, str) and len(pesel) == 11:
+                self.pesel = pesel
         else:
             if isinstance(pesel, str) and len(pesel) == 11:
                 self.pesel = pesel
