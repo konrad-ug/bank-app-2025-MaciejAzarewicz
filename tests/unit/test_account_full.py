@@ -24,7 +24,7 @@ def test_getpeseldate_invalid():
     assert getpeseldate("abcdef") == [None, None, None]
 
 def test_company_has_no_promo():
-    a = Account(company_name="Firma", nip="1234567890", kod="PROM_123")
+    a = Account(company_name="Firma", nip="8461627563", kod="PROM_123")
     assert a.balance == 0.0
 
 def test_send_transfer_and_receive_transfer():
@@ -33,4 +33,3 @@ def test_send_transfer_and_receive_transfer():
     a.send_transfer(40)
     a.receive_transfer(10)
     assert a.balance == 70
-

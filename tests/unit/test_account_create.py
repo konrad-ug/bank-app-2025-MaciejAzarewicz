@@ -21,9 +21,9 @@ def test_send_transfer_invalid_amount():
         a.send_transfer(0)
 
 def test_business_account_no_promo_and_nip():
-    b = Account(company_name="Firma", nip="1234567890")
+    b = Account(company_name="Firma", nip="8461627563")
     assert b.company_name == "Firma"
-    assert b.nip == "1234567890"
+    assert b.nip == "8461627563"
     assert b.balance == 0.0
     b2 = Account(company_name="X", nip="123")
     assert b2.nip == "Invalid"
@@ -41,7 +41,7 @@ def test_express_transfer_personal_insufficient_amount():
         a.send_express_transfer(11)
 
 def test_express_transfer_business_fee():
-    b = Account(company_name="Firma", nip="1234567890")
+    b = Account(company_name="Firma", nip="8461627563")
     b.balance = 100.0
     b.send_express_transfer(100)
     assert b.balance == -5.0
@@ -67,4 +67,3 @@ def test_history_not_changed_on_failed_operations():
     with pytest.raises(ValueError):
         acc.deposit(0)
     assert acc.history == []
-
