@@ -7,7 +7,7 @@ on:
     branches: [ main, lab11 ]
 
 jobs:
-  api-tests:
+  test:
     runs-on: ubuntu-latest
 
     steps:
