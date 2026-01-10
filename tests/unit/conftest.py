@@ -25,53 +25,68 @@ def account_with_5_history(personal_account):
 
 @pytest.fixture
 def business_account():
-    return Account(company_name="TestCompany", nip="1234567890")
+    return Account(company_name="KONRAD SOŁTYS", nip="8461627563")
 
 @pytest.fixture
 def business_account_with_zus_transfer():
-    acc = Account(company_name="CompanyZUS", nip="9876543210")
+    acc = Account(company_name="FIRMA Z ZUS", nip="8461627563")
     acc.deposit(10000)
-    acc.send_transfer(1775)
+    acc.receive_transfer(1775)
     return acc
 
 @pytest.fixture
 def business_account_high_balance_no_zus():
-    acc = Account(company_name="CompanyNoZUS", nip="1111111111")
-    acc.deposit(10000)
+    acc = Account(company_name="FIRMA BEZ ZUS", nip="8461627563")
+    acc.deposit(50000)
     return acc
 
 @pytest.fixture
 def accounts_registry():
     from src.registry import AccountsRegistry
     return AccountsRegistry()
-# FIXTURES Z PRAWDZIWYMI NIPAMI ZAMIAST FAKE
-@pytest.fixture
-def business_account():
-    """Konto firmowe z prawdziwym NIPem (KONRAD SOŁTYS)"""
-    return Account(company_name="KONRAD SOŁTYS", nip="8461627563")
-
-@pytest.fixture
-def business_account_high_balance_no_zus():
-    """Konto firmowe z wysokim saldem, bez ZUS"""
-    acc = Account(company_name="FIRMA BEZ ZUS", nip="8461627563")
-    acc.deposit(50000)  # Wysokie saldo
-    return acc
-
-@pytest.fixture
-def business_account_with_zus_transfer():
-    """Konto firmowe z transferem ZUS"""
-    acc = Account(company_name="FIRMA Z ZUS", nip="8461627563")
-    acc.deposit(10000)
-    acc.receive_transfer(2000)  # Symulacja ZUS
-    return acc
 
 @pytest.fixture
 def business_account_valid_nip():
-    """Fixture dla konta firmowego z prawidłowym NIPem"""
     return Account(company_name="TEST COMPANY", nip="8461627563")
 
 @pytest.fixture
 def business_account_invalid_nip():
-    """Fixture dla konta firmowego z nieprawidłowym NIPem
-    Użyj monkeypatch żeby zmodyfikować API response w testach"""
-    return None  # Ten fixture będzie używany tylko do testowania catching ValueError
+    return None
+
+@pytest.fixture
+def personal_account_with_history():
+    account = Account(first_name="Jan", last_name="Kowalski", pesel="05240811968")
+    account.deposit(100)
+    account.withdraw(1)
+    account.deposit(500)
+    return account
+
+@pytest.fixture
+def company_account_with_history(mocker):
+    mock_response = {
+        "result": {
+            "subject": {
+                "name": "TEST COMPANY",
+                "nip": "8461627563",
+                "statusVat": "Czynny"
+            }
+        }
+    }
+    mock_get = mocker.patch('requests.get')
+    mock_get.return_value.json.return_value = mock_response
+    mock_get.return_value.raise_for_status.return_value = None
+    
+    account = Account(company_name="TEST COMPANY", nip="8461627563")
+    account.deposit(5000)
+    account.send_transfer(1000)
+    account.receive_transfer(500)
+    return account
+
+@pytest.fixture
+def mock_smtp_client(mocker):
+    from unittest.mock import MagicMock
+    mock_client = MagicMock()
+    mock_client.send.return_value = True
+    
+    mocker.patch('src.account.SMTPClient', return_value=mock_client)
+    return mock_client
