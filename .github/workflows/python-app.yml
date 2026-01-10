@@ -27,9 +27,9 @@ jobs:
         run: |
           python3 -m coverage run --source=src -m pytest
 
-      - name: Show coverage and fail if < 80%
+      - name: Show coverage and fail if < 100%
         run: |
-          python3 -m coverage report --fail-under=80
+          python3 -m coverage report --fail-under=100
 
       - name: Generate coverage HTML
         if: always()
