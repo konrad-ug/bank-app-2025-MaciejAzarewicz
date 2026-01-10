@@ -51,7 +51,6 @@ class TestAccountCreationAPI:
 
     def test_create_company_account(self, base_url):
         company_data = generate_unique_company_data()
-        delete_account_safely(base_url, company_data['company_name'])
 
         payload = {
             "company_name": company_data["company_name"],
@@ -66,8 +65,6 @@ class TestAccountCreationAPI:
 
         assert response.status_code == 201
         assert "Account created" in response.json().get("message", "")
-
-        delete_account_safely(base_url, company_data['company_name'])
 
     def test_create_account_invalid_data(self, base_url):
         payload = {

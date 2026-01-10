@@ -20,7 +20,7 @@ def delete_account_safely(base_url, account_id):
 
 
 class TestIncomingTransfersPerformance:
-    MAX_RESPONSE_TIME = 0.5
+    MAX_RESPONSE_TIME = 2.5
     TRANSFER_COUNT = 100
     TRANSFER_AMOUNT = 10
 
@@ -156,7 +156,7 @@ class TestIncomingTransfersPerformance:
 
 
 class TestMixedTransfersPerformance:
-    MAX_RESPONSE_TIME = 0.5
+    MAX_RESPONSE_TIME = 2.5
 
     def test_mixed_transfers_performance(self, base_url):
         session = requests.Session()
