@@ -1,25 +1,30 @@
 from flask import Flask, request, jsonify
 from src.registry import AccountsRegistry
 from src.account import Account, InsufficientFunds
+import os
 
 app = Flask(__name__)
 registry = AccountsRegistry()
+
+
+def skip_mf_validation():
+    return os.environ.get('SKIP_MF_VALIDATION', '').lower() in ('true', '1', 'yes')
+
 
 @app.route("/api/accounts", methods=['POST'])
 def create_account():
     data = request.get_json()
     print(f"Create account request: {data}")
     try:
-        # Extract all fields from data, handling both personal and business accounts
         account_data = {
             "first_name": data.get("name"),
             "last_name": data.get("surname"), 
             "pesel": data.get("pesel"),
             "company_name": data.get("company_name"),
-            "nip": data.get("nip")
+            "nip": data.get("nip"),
+            "skip_mf_validation": skip_mf_validation()
         }
-        # Remove None values
-        account_data = {k: v for k, v in account_data.items() if v is not None}
+        account_data = {k: v for k, v in account_data.items() if v is not None and v is not False}
         account = Account(**account_data)
         registry.add_account(account)
         return jsonify({"message": "Account created"}), 201
@@ -74,25 +79,18 @@ def delete_account(pesel):
 def transfer_money(pesel):
     print(f"Transfer money request: {pesel}")
     data = request.get_json()
-    
-    # Find the account
     account = registry.find_account_by_pesel(pesel)
     if account is None:
         return jsonify({"error": "Account not found"}), 404
-    
-    # Validate transfer type
     transfer_type = data.get("type")
     if transfer_type not in ["incoming", "outgoing", "express"]:
         return jsonify({"error": "Invalid transfer type. Must be: incoming, outgoing, or express"}), 400
-    
-    # Validate amount
     try:
         amount = float(data.get("amount"))
         if amount <= 0:
             return jsonify({"error": "Amount must be positive"}), 400
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid amount"}), 400
-    
     try:
         if transfer_type == "incoming":
             account.receive_transfer(amount)
@@ -100,12 +98,10 @@ def transfer_money(pesel):
             account.send_transfer(amount)
         elif transfer_type == "express":
             account.send_express_transfer(amount)
-        
         return jsonify({
             "message": "Transfer completed successfully",
             "balance": account.balance
         }), 200
-        
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except InsufficientFunds as e:

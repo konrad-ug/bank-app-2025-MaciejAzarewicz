@@ -27,7 +27,7 @@ class InsufficientFunds(Exception):
 
 
 class Account:
-    def __init__(self, first_name=None, last_name=None, pesel=None, kod=None, company_name=None, nip=None):
+    def __init__(self, first_name=None, last_name=None, pesel=None, kod=None, company_name=None, nip=None, skip_mf_validation=False):
         self.first_name = first_name
         self.last_name = last_name
         self.company_name = None
@@ -40,7 +40,8 @@ class Account:
             self.company_name = company_name
             if isinstance(nip, str) and len(nip) == 10 and nip.isdigit():
                 self.nip = nip
-                self._validate_nip_with_mf(nip)
+                if not skip_mf_validation:
+                    self._validate_nip_with_mf(nip)
         else:
             if isinstance(pesel, str) and len(pesel) == 11:
                 self.pesel = pesel

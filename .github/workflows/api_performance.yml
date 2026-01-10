@@ -1,0 +1,73 @@
+name: API Performance
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Start Flask
+      run: |
+        export FLASK_APP=app/api.py
+        export FLASK_ENV=development
+        export PYTHONPATH=$GITHUB_WORKSPACE
+        flask run --host=0.0.0.0 --port=5000 &
+        echo "Flask started in background"
+
+    - name: Wait for Flask to start
+      run: |
+        echo "Oczekiwanie na uruchomienie serwera..."
+        for i in {1..30}; do
+          if curl -s http://localhost:5000/api/accounts/count > /dev/null 2>&1; then
+            echo "Serwer jest gotowy!"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "Serwer nie odpowiada po 30 sekundach"
+        exit 1
+
+    - name: Run Performance tests
+      run: |
+        echo "Uruchamianie testów wydajnościowych..."
+        python3 -m pytest tests/perf -v --tb=short 2>&1 | tee perf_output.txt
+        
+        if [ ${PIPESTATUS[0]} -ne 0 ]; then
+          echo ""
+          echo "⚠️  Niektóre testy wydajnościowe nie powiodły się!"
+          echo "Sprawdź szczegóły powyżej."
+          exit 1
+        fi
+
+    - name: Show performance summary
+      run: |
+        echo ""
+        echo "=============================================="
+        echo "Podsumowanie testów wydajnościowych"
+        echo "=============================================="
+        echo "Limit czasowy: 0.5 sekundy na request"
+        echo "Testy obejmują:"
+        echo "  - 100 cykli create/delete konta"
+        echo "  - 100 przelewów przychodzących"
+        echo "  - Sprawdzanie końcowego salda"
+        echo "=============================================="
