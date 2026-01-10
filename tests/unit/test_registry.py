@@ -119,3 +119,45 @@ class TestAccountsRegistry:
         found = registry.find_account_by_pesel(pesel)
         assert found is not None
         assert found.pesel == pesel
+
+    def test_update_account_success(self, accounts_registry):
+        registry = accounts_registry
+        acc = Account("Jan", "Kowalski", "05240811968")
+        registry.add_account(acc)
+        result = registry.update_account("05240811968", first_name="Janusz", last_name="Kwiatkowski")
+        assert result is True
+        found = registry.find_account_by_pesel("05240811968")
+        assert found.first_name == "Janusz"
+        assert found.last_name == "Kwiatkowski"
+
+    def test_update_account_partial(self, accounts_registry):
+        registry = accounts_registry
+        acc = Account("Jan", "Kowalski", "05240811968")
+        registry.add_account(acc)
+        result = registry.update_account("05240811968", first_name="Janusz")
+        assert result is True
+        found = registry.find_account_by_pesel("05240811968")
+        assert found.first_name == "Janusz"
+        assert found.last_name == "Kowalski"
+
+    def test_update_account_not_found(self, accounts_registry):
+        registry = accounts_registry
+        result = registry.update_account("99999999999", first_name="Test")
+        assert result is False
+
+    def test_delete_account_success(self, accounts_registry):
+        registry = accounts_registry
+        acc = Account("Jan", "Kowalski", "05240811968")
+        registry.add_account(acc)
+        assert registry.count_accounts() == 1
+        result = registry.delete_account("05240811968")
+        assert result is True
+        assert registry.count_accounts() == 0
+        found = registry.find_account_by_pesel("05240811968")
+        assert found is None
+
+    def test_delete_account_not_found(self, accounts_registry):
+        registry = accounts_registry
+        result = registry.delete_account("99999999999")
+        assert result is False
+        assert registry.count_accounts() == 0
