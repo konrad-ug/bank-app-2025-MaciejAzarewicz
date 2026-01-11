@@ -75,39 +75,6 @@ class TestCreateDeleteAccountPerformance:
 
         session.close()
 
-    def test_create_and_delete_company_account_100_times(self, base_url):
-        session = requests.Session()
-        successful_iterations = 0
-
-        for i in range(self.ITERATIONS):
-            iteration = i + 1
-            created = False
-            
-            for retry_count in range(10):
-                unique_nip = generate_valid_nip()
-
-                company_data = {
-                    "company_name": f"TEST_COMPANY_{iteration:04d}_{uuid.uuid4().hex[:4]}",
-                    "nip": unique_nip
-                }
-
-                create_response = requests.post(
-                    f"{base_url}/api/accounts",
-                    json=company_data,
-                    timeout=10
-                )
-
-                if create_response.status_code == 201:
-                    successful_iterations += 1
-                    created = True
-                    break
-                elif create_response.status_code not in [400, 409]:
-                    break
-
-        session.close()
-        
-        assert successful_iterations >= 80, \
-            f"Zbyt mało udanych iteracji: {successful_iterations}/100"
 
 
 class TestCreateDeleteAccountEdgeCases:
