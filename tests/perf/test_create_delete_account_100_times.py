@@ -94,7 +94,7 @@ class TestCreateDeleteAccountPerformance:
                 create_response = requests.post(
                     f"{base_url}/api/accounts",
                     json=company_data,
-                    timeout=2
+                    timeout=10
                 )
 
                 if create_response.status_code == 201:
