@@ -2,9 +2,9 @@ name: Unit tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, lab11 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, lab11 ]
 
 jobs:
   test:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          python3 -m coverage run --source=src -m pytest
+          python3 -m coverage run --source=src -m pytest tests/unit -v
 
       - name: Show coverage and fail if < 100%
         run: |

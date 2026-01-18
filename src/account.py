@@ -1,3 +1,9 @@
+import os
+import requests
+from datetime import datetime
+from smtp.smtp import SMTPClient
+
+
 def getpeseldate(pesel):
     try:
         s = str(pesel)
@@ -21,7 +27,7 @@ class InsufficientFunds(Exception):
 
 
 class Account:
-    def __init__(self, first_name=None, last_name=None, pesel=None, kod=None, company_name=None, nip=None):
+    def __init__(self, first_name=None, last_name=None, pesel=None, kod=None, company_name=None, nip=None, skip_mf_validation=False):
         self.first_name = first_name
         self.last_name = last_name
         self.company_name = None
@@ -34,6 +40,8 @@ class Account:
             self.company_name = company_name
             if isinstance(nip, str) and len(nip) == 10 and nip.isdigit():
                 self.nip = nip
+                if not skip_mf_validation:
+                    self._validate_nip_with_mf(nip)
         else:
             if isinstance(pesel, str) and len(pesel) == 11:
                 self.pesel = pesel
@@ -85,43 +93,77 @@ class Account:
         if amount > self.balance:
             raise InsufficientFunds
         new_balance = self.balance - float(amount) - float(fee)
-        if new_balance < -fee:
-            raise InsufficientFunds  # pragma: no cover
+        if new_balance < -fee * 10:  # pragma: no cover
+            raise InsufficientFunds
         self.balance = new_balance
         self.history.append(round(-float(amount), 2))
         self.history.append(round(-float(fee), 2))
 
     def submit_for_loan(self, amount):
-        """
-        Try to grant a personal loan of `amount`.
-        Rules:
-          - Only personal accounts (no company_name) are eligible.
-          - Condition A: last 3 transactions are deposits (positive values).
-          - Condition B: account has at least 5 transactions and sum(last 5) > amount.
-        Behaviour:
-          - If approved: increase balance by amount, append amount to history (rounded),
-            return True.
-          - If not approved: return False.
-        Consistent with other methods, raise ValueError for non-positive amounts.
-        """
         if amount <= 0:
             raise ValueError
-
-        # business accounts are not eligible
         if self.company_name:
             return False
-
-        # Condition A: last 3 transactions are deposits
         if len(self.history) >= 3 and all(x > 0 for x in self.history[-3:]):
             self.balance += float(amount)
             self.history.append(round(float(amount), 2))
             return True
-
-        # Condition B: at least 5 transactions and sum(last 5) > amount
         if len(self.history) >= 5:
             if sum(self.history[-5:]) > float(amount):
                 self.balance += float(amount)
                 self.history.append(round(float(amount), 2))
                 return True
-
         return False
+
+    def take_loan(self, amount):
+        if amount <= 0:
+            raise ValueError
+        if not self.company_name:
+            return False
+        if self.balance < 2 * float(amount):
+            return False
+        if 1775 not in self.history and -1775 not in self.history:
+            return False
+        self.balance += float(amount)
+        self.history.append(round(float(amount), 2))
+        return True
+
+    def _validate_nip_with_mf(self, nip):
+        base_url = os.getenv('BANK_APP_MF_URL', 'https://wl-api.mf.gov.pl/')
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        api_url = f"{base_url}api/search/nip/{nip}?date={current_date}"
+        try:
+            print(f"API Response: {api_url}")
+            response = requests.get(api_url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            print(f"Full API Response: {data}")
+            if data.get('result', {}).get('subject') is None:
+                raise ValueError("Company not registered!!")
+            subject = data['result']['subject']
+            status_vat = subject.get('statusVat', '')
+            if status_vat == 'Czynny':
+                print(f"NIP {nip} validated successfully - Status VAT: {status_vat}")
+                return True
+            else:
+                print(f"NIP {nip} validation failed - Status VAT: {status_vat}")
+                return False
+        except requests.RequestException as e:
+            print(f"API request failed: {e}")
+            return False
+        except Exception as e:
+            print(f"Validation error: {e}")
+            raise ValueError("Company not registered!!")
+
+    def send_history_via_email(self, email_address: str) -> bool:
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        subject = f"Account Transfer History {current_date}"
+        if self.company_name:
+            text = f"Company account history: {self.history}"
+        else:
+            text = f"Personal account history: {self.history}"
+        smtp_client = SMTPClient()
+        try:
+            return smtp_client.send(subject, text, email_address)
+        except Exception:
+            return False

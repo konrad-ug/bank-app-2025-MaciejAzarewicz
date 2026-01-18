@@ -15,7 +15,7 @@ def test_loan_approved_by_five_transactions_sum(account_with_5_history):
     assert a.history[-1] == 100.0
 
 def test_loan_rejected_if_not_personal():
-    b = Account(company_name="Firma", nip="1234567890")
+    b = Account(company_name="Firma", nip="8461627563")
     b.deposit(100)
     b.deposit(100)
     b.deposit(100)
@@ -33,4 +33,3 @@ def test_loan_rejected_when_conditions_not_met(personal_account):
 def test_submit_for_loan_invalid_amount_raises(personal_account, bad_amount):
     with pytest.raises(ValueError):
         personal_account.submit_for_loan(bad_amount)
-

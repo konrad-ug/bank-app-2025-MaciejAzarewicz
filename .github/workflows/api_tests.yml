@@ -1,0 +1,59 @@
+name: API tests
+
+on:
+  push:
+    branches: [ main, lab11 ]
+  pull_request:
+    branches: [ main, lab11 ]
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Start Flask
+      run: |
+        export FLASK_APP=app/api.py
+        export FLASK_ENV=development
+        export PYTHONPATH=$GITHUB_WORKSPACE
+        flask run --host=0.0.0.0 --port=5000 &
+        
+    - name: Wait for Flask to start
+      run: |
+        echo "Oczekiwanie na uruchomienie serwera..."
+        for i in {1..30}; do
+          if curl -s http://localhost:5000/api/accounts/count > /dev/null 2>&1; then
+            echo "Serwer jest gotowy!"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "Serwer nie odpowiada po 30 sekundach"
+        exit 1
+
+    - name: Run API tests
+      run: |
+        python3 -m pytest tests/api -v --tb=short
+
+    - name: Upload logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: api-test-logs
+        path: |
+          pytest-logs/
+          ${{ runner.temp }}/
