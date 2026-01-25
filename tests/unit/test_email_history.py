@@ -15,8 +15,8 @@ class TestSendHistoryViaEmail:
         assert result is True
         mock_send.assert_called_once()
         call_args = mock_send.call_args
-        assert "Account Transfer History" in call_args[0][0]
-        assert "Personal account history: [100.0, -1.0, 500.0]" in call_args[0][1]
+        assert "Historia przelewów konta" in call_args[0][0]
+        assert "Historia konta osobistego: [100.0, -1.0, 500.0]" in call_args[0][1]
         assert call_args[0][2] == "jan.kowalski@example.com"
 
     def test_company_account_sends_history_successfully(self, mocker):
@@ -42,8 +42,8 @@ class TestSendHistoryViaEmail:
         assert result is True
         mock_send.assert_called_once()
         call_args = mock_send.call_args
-        assert "Account Transfer History" in call_args[0][0]
-        assert "Company account history: [5000.0, -1000.0, 500.0]" in call_args[0][1]
+        assert "Historia przelewów konta" in call_args[0][0]
+        assert "Historia konta firmowego: [5000.0, -1000.0, 500.0]" in call_args[0][1]
         assert call_args[0][2] == "firma@example.com"
 
     def test_send_history_returns_false_on_failure(self, mocker):
@@ -66,7 +66,7 @@ class TestSendHistoryViaEmail:
         import re
         date_pattern = r'\d{4}-\d{2}-\d{2}'
         assert re.search(date_pattern, subject)
-        assert subject.startswith("Account Transfer History ")
+        assert subject.startswith("Historia przelewów konta ")
 
     def test_send_history_with_empty_history(self, mocker):
         account = Account(first_name="Jan", last_name="Kowalski", pesel="05240811968")
@@ -100,7 +100,7 @@ class TestSendHistoryViaEmail:
         account.send_history_via_email("test@example.com")
         call_args = mock_send.call_args
         text = call_args[0][1]
-        assert text.startswith("Personal account history:")
+        assert text.startswith("Historia konta osobistego:")
 
     def test_send_history_company_account_format(self, mocker):
         mock_response = {
@@ -122,7 +122,7 @@ class TestSendHistoryViaEmail:
         account.send_history_via_email("test@example.com")
         call_args = mock_send.call_args
         text = call_args[0][1]
-        assert text.startswith("Company account history:")
+        assert text.startswith("Historia konta firmowego:")
 
     def test_send_history_email_address_is_passed_correctly(self, mocker):
         account = Account(first_name="Jan", last_name="Kowalski", pesel="05240811968")
