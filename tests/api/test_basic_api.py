@@ -38,7 +38,7 @@ class TestAccountCreationAPI:
             timeout=2
         )
         assert response.status_code == 201
-        assert "Account created" in response.json().get("message", "")
+        assert "Konto utworzone" in response.json().get("message", "")
         delete_account_safely(base_url, unique_pesel)
 
     def test_create_company_account(self, base_url):
@@ -53,7 +53,7 @@ class TestAccountCreationAPI:
             timeout=2
         )
         assert response.status_code == 201
-        assert "Account created" in response.json().get("message", "")
+        assert "Konto utworzone" in response.json().get("message", "")
 
     def test_create_account_invalid_data(self, base_url):
         payload = {
@@ -204,7 +204,7 @@ class TestAccountDeletionAPI:
             timeout=2
         )
         assert response.status_code == 200
-        assert "deleted" in response.json().get("message", "").lower()
+        assert "konto usunięte" in response.json().get("message", "").lower()
 
     def test_delete_nonexistent_account(self, base_url):
         unique_id = str(uuid.uuid4())[:12]
