@@ -45,6 +45,10 @@ class Account:
         else:
             if isinstance(pesel, str) and len(pesel) == 11:
                 self.pesel = pesel
+        
+        # Set pesel for company accounts if valid
+        if isinstance(pesel, str) and len(pesel) == 11:
+            self.pesel = pesel
         parts = []
         if isinstance(kod, str) and "_" in kod:
             parts = kod.split("_", 1)
