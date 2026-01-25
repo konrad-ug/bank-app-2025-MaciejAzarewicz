@@ -3,7 +3,6 @@ class AccountsRegistry:
         self.accounts = []
 
     def add_account(self, account):
-        # Check for duplicate PESEL before adding
         if self.find_account_by_pesel(account.pesel) is not None:
             raise ValueError(f"PESEL {account.pesel} already exists")
         self.accounts.append(account)

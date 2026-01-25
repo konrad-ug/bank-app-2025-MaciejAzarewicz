@@ -7,7 +7,7 @@ class TestAccountCRUD:
     def test_create_account(self, api_client, sample_account_data):
         response = api_client.post('/api/accounts', json=sample_account_data)
         assert response.status_code == 201
-        assert response.json == {"message": "Account created"}
+        assert response.json == {"message": "Konto utworzone"}
         assert registry.count_accounts() == 1
 
     def test_get_all_accounts_empty(self, api_client):
@@ -55,7 +55,7 @@ class TestAccountCRUD:
         update_data = {"name": "Janusz"}
         response = api_client.patch('/api/accounts/05240811968', json=update_data)
         assert response.status_code == 200
-        assert response.json == {"message": "Account updated"}
+        assert response.json == {"message": "Konto zaktualizowane"}
         get_response = api_client.get('/api/accounts/05240811968')
         assert get_response.json["name"] == "Janusz"
         assert get_response.json["surname"] == "Kowalski"
@@ -98,7 +98,7 @@ class TestAccountCRUD:
         assert registry.count_accounts() == 1
         response = api_client.delete('/api/accounts/05240811968')
         assert response.status_code == 200
-        assert response.json == {"message": "Account deleted"}
+        assert response.json == {"message": "Konto usunięte"}
         assert registry.count_accounts() == 0
 
     def test_delete_account_not_found(self, api_client):
@@ -125,11 +125,9 @@ class TestAccountCRUD:
         assert get_response.json["pesel"] == pesel
 
     def test_create_account_duplicate_pesel_should_return_409(self, api_client, sample_account_data):
-        # Create first account
         response1 = api_client.post('/api/accounts', json=sample_account_data)
         assert response1.status_code == 201
         
-        # Try to create second account with same PESEL
         response2 = api_client.post('/api/accounts', json=sample_account_data)
         assert response2.status_code == 409
         assert "error" in response2.json

@@ -49,7 +49,7 @@ def check_account_with_pesel_does_not_exist(context, pesel):
 @when('I update "{field}" of account with pesel: "{pesel}" to "{value}"')
 def update_field(context, field, pesel, value):
     if field not in ["name", "surname"]:
-        raise ValueError(f"Invalid field: {field}. Must be 'name' or 'surname'.")
+        raise ValueError(f"Niepoprawne pole: {field}. Musi być 'name' lub 'surname'.")
     json_body = {f"{field}": f"{value}"}
     response = requests.patch(URL + f"/api/accounts/{pesel}", json=json_body)
     assert response.status_code == 200
@@ -68,8 +68,6 @@ def delete_account(context, pesel):
     response = requests.delete(URL + f"/api/accounts/{pesel}")
     assert response.status_code == 200
 
-
-# ========== TRANSFER STEPS ==========
 
 @when('I make incoming transfer of "{amount}" to account with pesel: "{pesel}"')
 @given('I make incoming transfer of "{amount}" to account with pesel: "{pesel}"')
@@ -105,6 +103,6 @@ def check_balance(context, pesel, expected_balance):
 
 @then('Response status code should be "{status_code}"')
 def check_status_code(context, status_code):
-    assert hasattr(context, 'response'), "No response stored in context"
+    assert hasattr(context, 'response'), "Brak odpowiedzi w kontekście"
     assert context.response.status_code == int(status_code), \
-        f"Expected {status_code}, got {context.response.status_code}. Response: {context.response.text}"
+        f"Oczekiwano {status_code}, otrzymano {context.response.status_code}. Odpowiedź: {context.response.text}"
