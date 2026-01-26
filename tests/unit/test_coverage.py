@@ -599,20 +599,15 @@ class TestRepositoryAbstractMethodDefinitions:
         Wykonuje linię 7 (@abstractmethod) i 8-9 (sygnatura metody)
         """
         import inspect
-        from abc import abstractmethod
         
         # Pobieramy metodę z klasy
-        method = AccountsRepository.save_all
+        method = inspect.getattr_static(AccountsRepository, 'save_all')
         
-        # Sprawdzamy, że to jest metoda abstrakcyjna
-        assert isinstance(inspect.getattr_static(AccountsRepository, 'save_all'), abstractmethod)
-        
-        # Wywołujemy metodę przez klasę (bez instancji) aby pokryć linie
-        # To nie zadziała (TypeError), ale linie zostaną pokryte
-        try:
-            AccountsRepository.save_all(None, [])
-        except TypeError:
-            pass  # Oczekiwane - metoda jest abstrakcyjna
+        # Sprawdzamy, czy metoda ma atrybut __isabstractmethod__
+        assert hasattr(method, '__isabstractmethod__'), \
+            "Metoda save_all nie jest oznaczona jako abstrakcyjna"
+        assert method.__isabstractmethod__ is True, \
+            "Metoda save_all powinna być abstrakcyjna"
     
     def test_load_all_abstract_method_defined(self):
         """
@@ -620,19 +615,15 @@ class TestRepositoryAbstractMethodDefinitions:
         Wykonuje linię 11 (@abstractmethod) i 12-13 (sygnatura metody)
         """
         import inspect
-        from abc import abstractmethod
         
         # Pobieramy metodę z klasy
-        method = AccountsRepository.load_all
+        method = inspect.getattr_static(AccountsRepository, 'load_all')
         
-        # Sprawdzamy, że to jest metoda abstrakcyjna
-        assert isinstance(inspect.getattr_static(AccountsRepository, 'load_all'), abstractmethod)
-        
-        # Wywołujemy metodę przez klasę (bez instancji) aby pokryć linie
-        try:
-            AccountsRepository.load_all(None)
-        except TypeError:
-            pass  # Oczekiwane - metoda jest abstrakcyjna
+        # Sprawdzamy, czy metoda ma atrybut __isabstractmethod__
+        assert hasattr(method, '__isabstractmethod__'), \
+            "Metoda load_all nie jest oznaczona jako abstrakcyjna"
+        assert method.__isabstractmethod__ is True, \
+            "Metoda load_all powinna być abstrakcyjna"
 
 
 class TestNipValidationCoverage:
