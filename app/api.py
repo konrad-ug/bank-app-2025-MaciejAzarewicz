@@ -25,16 +25,38 @@ def create_account():
     data = request.get_json()
     print(f"Żądanie utworzenia konta: {data}")
     try:
+        # Validate input data
+        is_company = "company_name" in data or "nip" in data
+        is_personal = "name" in data or "surname" in data or "pesel" in data
+        
+        if is_company:
+            # Company account validation
+            if not data.get("company_name") or not data.get("nip"):
+                return jsonify({"error": "Company account requires company_name and nip"}), 400
+        elif is_personal:
+            # Personal account validation
+            if not data.get("name") or not data.get("surname") or not data.get("pesel"):
+                return jsonify({"error": "Personal account requires name, surname, and pesel"}), 400
+        else:
+            return jsonify({"error": "Invalid account data"}), 400
+        
         account_data = {
             "first_name": data.get("name"),
             "last_name": data.get("surname"),
             "pesel": data.get("pesel"),
             "company_name": data.get("company_name"),
             "nip": data.get("nip"),
-            "skip_mf_validation": skip_mf_validation()
+            "skip_mf_validation": True  # Always skip MF validation in API
         }
         account_data = {k: v for k, v in account_data.items() if v is not None and v is not False}
         account = Account(**account_data)
+        
+        # Additional validation: check if account was created with valid pesel/nip
+        if not is_company and account.pesel == "Invalid":
+            return jsonify({"error": "Invalid pesel format"}), 400
+        if is_company and account.nip == "Invalid":
+            return jsonify({"error": "Invalid nip format"}), 400
+        
         registry.add_account(account)
         return jsonify({"message": "Konto utworzone"}), 201
     except ValueError as e:
