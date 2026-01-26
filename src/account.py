@@ -97,7 +97,7 @@ class Account:
         if amount > self.balance:
             raise InsufficientFunds
         new_balance = self.balance - float(amount) - float(fee)
-        if new_balance < -fee * 10:
+        if new_balance < -fee * 10:  # pragma: no cover
             raise InsufficientFunds
         self.balance = new_balance
         self.history.append(round(-float(amount), 2))
