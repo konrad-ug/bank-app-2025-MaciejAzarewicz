@@ -6,7 +6,14 @@ import os
 
 app = Flask(__name__)
 registry = AccountsRegistry()
-mongo_repository = MongoAccountsRepository()
+mongo_repository = None
+
+
+def get_mongo_repository():
+    global mongo_repository
+    if mongo_repository is None:
+        mongo_repository = MongoAccountsRepository()
+    return mongo_repository
 
 
 def skip_mf_validation():
@@ -123,7 +130,7 @@ def save_accounts():
     print("Żądanie zapisania kont do bazy")
     try:
         accounts = registry.get_all_accounts()
-        success = mongo_repository.save_all(accounts)
+        success = get_mongo_repository().save_all(accounts)
         if success:
             return jsonify({"message": f"Zapisano {len(accounts)} kont do bazy danych"}), 200
         else:
@@ -139,7 +146,7 @@ def load_accounts():
     try:
         registry.accounts = []
 
-        account_dicts = mongo_repository.load_all()
+        account_dicts = get_mongo_repository().load_all()
 
         for acc_dict in account_dicts:
             account = Account(
