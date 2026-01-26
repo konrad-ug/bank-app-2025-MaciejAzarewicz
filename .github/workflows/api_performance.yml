@@ -2,9 +2,9 @@ name: API Performance
 
 on:
   push:
-    branches: [ main, lab11 ]
+    branches: [ main, lab13 ]
   pull_request:
-    branches: [ main, lab11 ]
+    branches: [ main, lab13 ]
   workflow_dispatch:
 
 jobs:

@@ -45,6 +45,9 @@ class Account:
         else:
             if isinstance(pesel, str) and len(pesel) == 11:
                 self.pesel = pesel
+        
+        if isinstance(pesel, str) and len(pesel) == 11:
+            self.pesel = pesel
         parts = []
         if isinstance(kod, str) and "_" in kod:
             parts = kod.split("_", 1)
@@ -133,35 +136,35 @@ class Account:
         current_date = datetime.now().strftime('%Y-%m-%d')
         api_url = f"{base_url}api/search/nip/{nip}?date={current_date}"
         try:
-            print(f"API Response: {api_url}")
+            print(f"Odpowiedź API: {api_url}")
             response = requests.get(api_url, timeout=10)
             response.raise_for_status()
             data = response.json()
-            print(f"Full API Response: {data}")
+            print(f"Pełna odpowiedź API: {data}")
             if data.get('result', {}).get('subject') is None:
-                raise ValueError("Company not registered!!")
+                raise ValueError("Firma nie zarejestrowana!!")
             subject = data['result']['subject']
             status_vat = subject.get('statusVat', '')
             if status_vat == 'Czynny':
-                print(f"NIP {nip} validated successfully - Status VAT: {status_vat}")
+                print(f"NIP {nip} zwalidowany poprawnie - Status VAT: {status_vat}")
                 return True
             else:
-                print(f"NIP {nip} validation failed - Status VAT: {status_vat}")
+                print(f"NIP {nip} walidacja nieudana - Status VAT: {status_vat}")
                 return False
         except requests.RequestException as e:
-            print(f"API request failed: {e}")
+            print(f"Błąd zapytania API: {e}")
             return False
         except Exception as e:
-            print(f"Validation error: {e}")
-            raise ValueError("Company not registered!!")
+            print(f"Błąd walidacji: {e}")
+            raise ValueError("Firma nie zarejestrowana!!")
 
     def send_history_via_email(self, email_address: str) -> bool:
         current_date = datetime.now().strftime('%Y-%m-%d')
-        subject = f"Account Transfer History {current_date}"
+        subject = f"Historia przelewów konta {current_date}"
         if self.company_name:
-            text = f"Company account history: {self.history}"
+            text = f"Historia konta firmowego: {self.history}"
         else:
-            text = f"Personal account history: {self.history}"
+            text = f"Historia konta osobistego: {self.history}"
         smtp_client = SMTPClient()
         try:
             return smtp_client.send(subject, text, email_address)

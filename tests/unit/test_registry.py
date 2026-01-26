@@ -91,7 +91,6 @@ class TestAccountsRegistry:
         acc = Account("Jan", "Kowalski", "05240811968")
         registry1.add_account(acc)
         assert registry1.count_accounts() == 1
-        # Same PESEL should work in different registry
         acc2 = Account("Anna", "Nowak", "05240811968")
         registry2.add_account(acc2)
         assert registry2.count_accounts() == 1
@@ -101,7 +100,6 @@ class TestAccountsRegistry:
         acc1 = Account("Jan", "Kowalski", "05240811968")
         acc2 = Account("Janina", "Kowalska", "05240811968")
         registry.add_account(acc1)
-        # Test that adding duplicate PESEL raises ValueError
         with pytest.raises(ValueError) as excinfo:
             registry.add_account(acc2)
         assert "already exists" in str(excinfo.value)
