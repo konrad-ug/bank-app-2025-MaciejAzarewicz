@@ -705,8 +705,6 @@ class TestNipValidationCoverage:
             nip="1234567890"
         )
         
-        # Wywołujemy walidację NIP
         result = account._validate_nip_with_mf("1234567890")
         
-        # Sprawdzamy, że metoda zwróciła True (linia 151)
         assert result is True
