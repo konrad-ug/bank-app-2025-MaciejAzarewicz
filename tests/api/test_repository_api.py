@@ -28,25 +28,31 @@ class TestAccountsSaveLoadAPI:
         client.delete('/api/accounts/90050512345')
         client.delete('/api/accounts/85050567890')
 
-    def test_save_accounts_returns_success_message(self, client, setup_accounts):
+    def test_save_accounts_returns_success_message(self, client, setup_accounts, mocker):
+        mock_repo = mocker.Mock()
+        mock_repo.save_all.return_value = True
+        mocker.patch('app.api.get_mongo_repository', return_value=mock_repo)
         response = client.post('/api/accounts/save')
         assert response.status_code == 200
         data = response.get_json()
         assert "message" in data
         assert "2" in data["message"]
 
-    def test_save_accounts_with_empty_registry(self, client):
+    def test_save_accounts_with_empty_registry(self, client, mocker):
+        mock_repo = mocker.Mock()
+        mock_repo.save_all.return_value = True
+        mocker.patch('app.api.get_mongo_repository', return_value=mock_repo)
         response = client.post('/api/accounts/save')
         assert response.status_code == 200
         data = response.get_json()
         assert "0" in data["message"]
 
     def test_load_accounts_returns_success_message(self, client, setup_accounts, mocker):
-        client.post('/api/accounts/save')
-        mock_repo_class = mocker.patch('app.api.MongoAccountsRepository')
         mock_repo = mocker.Mock()
+        mock_repo.save_all.return_value = True
         mock_repo.load_all.return_value = []
-        mock_repo_class.return_value = mock_repo
+        mocker.patch('app.api.get_mongo_repository', return_value=mock_repo)
+        client.post('/api/accounts/save')
         response = client.post('/api/accounts/load')
         assert response.status_code == 200
         data = response.get_json()
@@ -54,10 +60,9 @@ class TestAccountsSaveLoadAPI:
         assert "count" in data
 
     def test_save_endpoint_returns_500_on_error(self, client, setup_accounts, mocker):
-        mock_repo_class = mocker.patch('app.api.MongoAccountsRepository')
         mock_repo = mocker.Mock()
         mock_repo.save_all.return_value = False
-        mock_repo_class.return_value = mock_repo
+        mocker.patch('app.api.get_mongo_repository', return_value=mock_repo)
         response = client.post('/api/accounts/save')
         assert response.status_code == 500
         data = response.get_json()
@@ -78,11 +83,10 @@ class TestAccountsSaveLoadAPI:
             "company_name": None,
             "nip": "Invalid"
         }]
-        mock_repo_class = mocker.patch('app.api.MongoAccountsRepository')
         mock_repo = mocker.Mock()
         mock_repo.save_all.return_value = True
         mock_repo.load_all.return_value = test_account_data
-        mock_repo_class.return_value = mock_repo
+        mocker.patch('app.api.get_mongo_repository', return_value=mock_repo)
         save_response = client.post('/api/accounts/save')
         assert save_response.status_code == 200
         client.delete('/api/accounts/90050599999')
@@ -107,10 +111,9 @@ class TestAccountsSaveLoadAPI:
                 "nip": "Invalid"
             }
         ]
-        mock_repo_class = mocker.patch('app.api.MongoAccountsRepository')
         mock_repo = mocker.Mock()
         mock_repo.load_all.return_value = loaded_accounts
-        mock_repo_class.return_value = mock_repo
+        mocker.patch('app.api.get_mongo_repository', return_value=mock_repo)
         response = client.post('/api/accounts/load')
         assert response.status_code == 200
         client.delete('/api/accounts/90050522222')
